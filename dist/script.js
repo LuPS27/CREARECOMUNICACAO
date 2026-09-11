@@ -34,7 +34,7 @@ dialog.addEventListener('close',()=>{document.body.style.overflow='';});
     ctx.setTransform(d,0,0,d,0,0);dirty=true;
   };
   const measure=()=>{
-    target=motion.matches?0:clamp(-track.getBoundingClientRect().top/Math.max(1,track.offsetHeight-stage.offsetHeight))*49;
+    target=clamp(-track.getBoundingClientRect().top/Math.max(1,track.offsetHeight-stage.offsetHeight))*49;
   };
   const draw=()=>{
     const index=Math.round(current);
@@ -51,7 +51,7 @@ dialog.addEventListener('close',()=>{document.body.style.overflow='';});
   const tick=time=>{
     resize();measure();
     const before=current;
-    current=motion.matches?0:current+(target-current)*(1-Math.exp(-Math.min(64,time-last)/90));
+    current=motion.matches?target:current+(target-current)*(1-Math.exp(-Math.min(64,time-last)/90));
     last=time;if(Math.abs(target-current)<.002)current=target;
     if(before!==current||dirty)draw();
     requestAnimationFrame(tick);
