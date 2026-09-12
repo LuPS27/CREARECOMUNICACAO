@@ -32,14 +32,26 @@ dialog.addEventListener('close',()=>{document.body.style.overflow='';});
     let x1=240,y1=60,x2=0,y2=0;
     for(let y=0;y<60;y++)for(let x=0;x<240;x++){const k=(y*240+x)*4;if(Math.min(pixels[k],pixels[k+1],pixels[k+2])>160){x1=Math.min(x1,x);x2=Math.max(x2,x);y1=Math.min(y1,y);y2=Math.max(y2,y);}}
     if(x2<=x1)return;
-    const x=455+x1-6,y=y0+y1-6,w=x2-x1+13,h=y2-y1+13;
+    // Flash highlights must not be mistaken for extra lettering.
+    if(frame>40){x1=10;x2=171;y1=17;y2=48;}
+    const x=455+x1-7,y=y0+y1-7,w=x2-x1+15,h=y2-y1+15;
     const patch=document.createElement('canvas');patch.width=w;patch.height=h;
     const pc=patch.getContext('2d');pc.drawImage(texture,0,0,w,h);
-    // Feather only the outside edge; the center fully covers the lettering.
-    pc.globalCompositeOperation='destination-in';
-    const mask=document.createElement('canvas');mask.width=w;mask.height=h;
-    const mc=mask.getContext('2d');mc.filter='blur(2px)';mc.fillRect(3,3,w-6,h-6);
-    pc.drawImage(mask,0,0);patches.set(img,{image:patch,x,y,w,h});
+    const clean=pc.getImageData(0,0,w,h),original=p.getImageData(x,y,w,h);
+    // Relight the generated material from this frame's own surface above and
+    // below the mark, preserving the moving flash instead of a fixed gray box.
+    for(let py=0;py<h;py++)for(let px=0;px<w;px++){
+      const k=(py*w+px)*4,t=py/(h-1);
+      const feather=Math.min(1,px/5,(w-1-px)/5,py/5,(h-1-py)/5);
+      const grain=(clean.data[k]-58)*.025;
+      for(let c=0;c<3;c++){
+        let top=0,bottom=0,count=0;
+        for(let dx=-3;dx<=3;dx++){const sx=Math.max(0,Math.min(w-1,px+dx));top+=original.data[sx*4+c];bottom+=original.data[((h-1)*w+sx)*4+c];count++;}
+        clean.data[k+c]=(top*(1-t)+bottom*t)/count+grain;
+      }
+      clean.data[k+3]=Math.round(255*Math.max(0,feather));
+    }
+    pc.putImageData(clean,0,0);patches.set(img,{image:patch,x,y,w,h});
   };
   let current=0,target=0,dirty=true,last=0,width=0,height=0,dpr=0;
   const clamp=x=>Math.max(0,Math.min(1,x));
