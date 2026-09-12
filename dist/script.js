@@ -8,8 +8,6 @@ dialog.addEventListener('close',()=>{document.body.style.overflow='';});
 
 // Smooth custom cursor adapted from the React Bits interaction model.
 (()=>{
-  const reduced=matchMedia('(prefers-reduced-motion:reduce)');
-  if(reduced.matches)return;
   const ring=document.createElement('span'),dot=document.createElement('span');
   ring.className='custom-cursor-ring';dot.className='custom-cursor-dot';
   ring.setAttribute('aria-hidden','true');dot.setAttribute('aria-hidden','true');
