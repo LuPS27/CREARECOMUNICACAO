@@ -6,6 +6,20 @@ dialog.querySelector('.dialog-close').addEventListener('click',()=>dialog.close(
 dialog.addEventListener('click',event=>{if(event.target===dialog){const rect=dialog.getBoundingClientRect();if(event.clientX<rect.left||event.clientX>rect.right||event.clientY<rect.top||event.clientY>rect.bottom)dialog.close();}});
 dialog.addEventListener('close',()=>{document.body.style.overflow='';});
 
+// Client cards follow the pointer with a restrained 3D tilt and moving light.
+document.querySelectorAll('.project').forEach(card=>{
+  card.addEventListener('pointermove',event=>{
+    if(event.pointerType==='touch')return;
+    const rect=card.getBoundingClientRect();
+    const x=(event.clientX-rect.left)/rect.width,y=(event.clientY-rect.top)/rect.height;
+    card.style.setProperty('--ry',((x-.5)*7).toFixed(2)+'deg');
+    card.style.setProperty('--rx',((.5-y)*7).toFixed(2)+'deg');
+    card.style.setProperty('--mx',(x*100).toFixed(1)+'%');
+    card.style.setProperty('--my',(y*100).toFixed(1)+'%');
+  });
+  card.addEventListener('pointerleave',()=>{card.style.setProperty('--rx','0deg');card.style.setProperty('--ry','0deg');});
+});
+
 // The canvas stays outside the hero grid so it cannot displace its content.
 (()=>{
   const hero=document.querySelector('.hero');
