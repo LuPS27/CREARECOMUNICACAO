@@ -6,6 +6,37 @@ dialog.querySelector('.dialog-close').addEventListener('click',()=>dialog.close(
 dialog.addEventListener('click',event=>{if(event.target===dialog){const rect=dialog.getBoundingClientRect();if(event.clientX<rect.left||event.clientX>rect.right||event.clientY<rect.top||event.clientY>rect.bottom)dialog.close();}});
 dialog.addEventListener('close',()=>{document.body.style.overflow='';});
 
+// Smooth custom cursor adapted from the React Bits interaction model.
+(()=>{
+  const reduced=matchMedia('(prefers-reduced-motion:reduce)');
+  if(reduced.matches)return;
+  const ring=document.createElement('span'),dot=document.createElement('span');
+  ring.className='custom-cursor-ring';dot.className='custom-cursor-dot';
+  ring.setAttribute('aria-hidden','true');dot.setAttribute('aria-hidden','true');
+  document.body.append(ring,dot);document.body.classList.add('custom-cursor-enabled');
+  let tx=innerWidth/2,ty=innerHeight/2,rx=tx,ry=ty,dx=tx,dy=ty,running=true;
+  const interactive='a,button,summary,[role="button"],input,textarea,select';
+  addEventListener('pointermove',event=>{
+    if(event.pointerType==='touch')return;
+    tx=event.clientX;ty=event.clientY;
+    document.body.classList.add('custom-cursor-visible');
+    ring.classList.toggle('is-active',!!event.target.closest(interactive));
+  },{passive:true});
+  addEventListener('pointerdown',()=>ring.classList.add('is-pressed'),{passive:true});
+  addEventListener('pointerup',()=>ring.classList.remove('is-pressed'),{passive:true});
+  addEventListener('blur',()=>document.body.classList.remove('custom-cursor-visible'));
+  document.addEventListener('mouseleave',()=>document.body.classList.remove('custom-cursor-visible'));
+  const animate=()=>{
+    if(!running)return;
+    dx+=(tx-dx)*.34;dy+=(ty-dy)*.34;rx+=(tx-rx)*.15;ry+=(ty-ry)*.15;
+    dot.style.transform=`translate3d(${dx}px,${dy}px,0)`;
+    ring.style.transform=`translate3d(${rx}px,${ry}px,0)`;
+    requestAnimationFrame(animate);
+  };
+  animate();
+  reduced.addEventListener('change',event=>{if(event.matches){running=false;document.body.classList.remove('custom-cursor-enabled','custom-cursor-visible');ring.remove();dot.remove();}});
+})();
+
 // Client cards follow the pointer with a restrained 3D tilt and moving light.
 document.querySelectorAll('.project').forEach(card=>{
   card.addEventListener('pointermove',event=>{
